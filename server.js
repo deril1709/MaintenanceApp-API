@@ -8,6 +8,9 @@ const users = require('./src/api/users');
 
 //plugin authentications
 const authentications = require('./src/api/authentications')
+const AuthenticationsService = require('./src/services/postgres/AuthenticationsService');
+const TokenManager = require('./src/utils/tokenManager')
+const AuthenticationsValidator = require('./src/validator/authentications');
 
 // Services
 const UsersService = require('./src/services/postgres/UsersService');
@@ -21,7 +24,7 @@ const ClientError = require('./src/exceptions/ClientError');
 const init = async () => {
   // 🔧 Inisialisasi Service
   const usersService = new UsersService();
-
+  const authenticationsService = new AuthenticationsService();
   // 🚀 Membuat server instance
   const server = Hapi.server({
     port: process.env.PORT || 5000,
@@ -52,6 +55,7 @@ const init = async () => {
       },
     }),
   });
+  console.log('DEBUG TokenManager:', TokenManager);
 
   // 🔌 Registrasi plugin lokal (users, dll)
   await server.register([
@@ -62,6 +66,15 @@ const init = async () => {
         validator: UsersValidator,
       },
     },
+    {
+       plugin: authentications,
+        options: {
+      usersService,
+      authenticationsService,
+      tokenManager: TokenManager,
+      validator: AuthenticationsValidator,
+    },
+    }
   ]);
 
   // 🧱 Penanganan error global
