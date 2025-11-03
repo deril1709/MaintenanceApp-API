@@ -13,10 +13,11 @@ class AuthenticationsHandler {
   async postAuthenticationHandler(request, h) {
     this._validator.validatePostAuthenticationPayload(request.payload);
     const { username, password } = request.payload;
-    const id = await this._usersService.verifyUserCredential(username, password);
+    const { id, role } = await this._usersService.verifyUserCredential(username, password);
 
-    const accessToken = this._tokenManager.generateAccessToken({ id });
-    const refreshToken = this._tokenManager.generateRefreshToken({ id });
+    const accessToken = this._tokenManager.generateAccessToken({ id, role });
+    const refreshToken = this._tokenManager.generateRefreshToken({ id, role });
+
 
     await this._authenticationsService.addRefreshToken(refreshToken);
 
@@ -33,9 +34,9 @@ class AuthenticationsHandler {
     this._validator.validatePutAuthenticationPayload(request.payload);
     const { refreshToken } = request.payload;
     await this._authenticationsService.verifyRefreshToken(refreshToken);
-    const { id } = this._tokenManager.verifyRefreshToken(refreshToken);
+    const { id, role } = this._tokenManager.verifyRefreshToken(refreshToken);
+    const accessToken = this._tokenManager.generateAccessToken({ id, role });
 
-    const accessToken = this._tokenManager.generateAccessToken({ id });
     return {
       status: 'success',
       message: 'Access Token berhasil diperbarui',

@@ -54,7 +54,7 @@ class UsersService {
       throw new AuthenticationError('Kredensial yang Anda berikan salah');
     }
 
-    const { id, password: hashedPassword } = result.rows[0];
+    const { id, password: hashedPassword, role } = result.rows[0];
 
     const match = await bcrypt.compare(password, hashedPassword);
 
@@ -62,8 +62,17 @@ class UsersService {
       throw new AuthenticationError('Kredensial yang Anda berikan salah');
     }
 
-    return id;
+    return { id, role };;
   }
+  async findAdmin() {
+  const query = {
+    text: 'SELECT id FROM users WHERE role = $1 LIMIT 1',
+    values: ['admin'],
+  };
+  const result = await this._pool.query(query);
+  return result.rowCount > 0 ? result.rows[0] : null;
+}
+
 }
 
 module.exports = UsersService;

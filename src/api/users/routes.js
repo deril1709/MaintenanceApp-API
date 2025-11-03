@@ -4,6 +4,12 @@ const routes = (handler) => [
     path: '/users',
     handler: handler.postUserHandler,
   },
+  {
+  method: 'POST',
+  path: '/users/admin',
+  handler: handler.postAdminUserHandler,
+}
+
 ];
 
 module.exports = routes;
