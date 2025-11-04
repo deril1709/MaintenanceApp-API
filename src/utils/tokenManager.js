@@ -1,12 +1,10 @@
 const Jwt = require('@hapi/jwt');
 
 const TokenManager = {
-  generateAccessToken: (payload) => 
+  generateAccessToken: (payload) =>
     Jwt.token.generate(payload, process.env.ACCESS_TOKEN_KEY),
-    
-  generateRefreshToken: (payload) => 
+  generateRefreshToken: (payload) =>
     Jwt.token.generate(payload, process.env.REFRESH_TOKEN_KEY),
-
   verifyRefreshToken: (refreshToken) => {
     try {
       const artifacts = Jwt.token.decode(refreshToken);

@@ -43,27 +43,27 @@ class UsersService {
   }
 
   async verifyUserCredential(username, password) {
-    const query = {
-      text: 'SELECT id, password FROM users WHERE username = $1',
-      values: [username],
-    };
+  const query = {
+    text: 'SELECT id, username, password, role FROM users WHERE username = $1',
+    values: [username],
+  };
 
-    const result = await this._pool.query(query);
+  const result = await this._pool.query(query);
 
-    if (!result.rows.length) {
-      throw new AuthenticationError('Kredensial yang Anda berikan salah');
-    }
-
-    const { id, password: hashedPassword, role } = result.rows[0];
-
-    const match = await bcrypt.compare(password, hashedPassword);
-
-    if (!match) {
-      throw new AuthenticationError('Kredensial yang Anda berikan salah');
-    }
-
-    return { id, role };;
+  if (!result.rowCount) {
+    throw new AuthenticationError('Kredensial yang Anda berikan salah');
   }
+
+  const { id, password: hashedPassword, role } = result.rows[0];
+
+  const match = await bcrypt.compare(password, hashedPassword);
+  if (!match) {
+    throw new AuthenticationError('Kredensial yang Anda berikan salah');
+  }
+
+  return { id, username, role };
+}
+
   async findAdmin() {
   const query = {
     text: 'SELECT id FROM users WHERE role = $1 LIMIT 1',
