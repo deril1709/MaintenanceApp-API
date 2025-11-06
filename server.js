@@ -5,6 +5,8 @@ const Jwt = require('@hapi/jwt');
 
 // Plugin users
 const users = require('./src/api/users');
+const UsersService = require('./src/services/postgres/UsersService');
+const UsersValidator = require('./src/validator/users');
 
 //plugin authentications
 const authentications = require('./src/api/authentications')
@@ -12,11 +14,10 @@ const AuthenticationsService = require('./src/services/postgres/AuthenticationsS
 const TokenManager = require('./src/utils/tokenManager')
 const AuthenticationsValidator = require('./src/validator/authentications');
 
-// Services
-const UsersService = require('./src/services/postgres/UsersService');
-
-// Validators
-const UsersValidator = require('./src/validator/users');
+// plugin tasks
+const tasks = require('./src/api/tasks');
+const TasksService = require('./src/services/postgres/TasksService');
+const TasksValidator = require('./src/validator/tasks');
 
 // Exceptions
 const ClientError = require('./src/exceptions/ClientError');
@@ -75,7 +76,14 @@ const init = async () => {
       tokenManager: TokenManager,
       validator: AuthenticationsValidator,
     },
-    }
+    },
+    {
+    plugin: tasks,
+    options: {
+      service: new TasksService(),
+      validator: TasksValidator,
+    },
+  },
   ]);
 
   // 🧱 Penanganan error global
