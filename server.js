@@ -19,6 +19,11 @@ const tasks = require('./src/api/tasks');
 const TasksService = require('./src/services/postgres/TasksService');
 const TasksValidator = require('./src/validator/tasks');
 
+// plugin assets
+const assets = require('./src/api/assets');
+const AssetsService = require('./src/services/postgres/AssetsService');
+const AssetsValidator = require('./src/validator/assets');
+
 // Exceptions
 const ClientError = require('./src/exceptions/ClientError');
 
@@ -62,14 +67,14 @@ const init = async () => {
   // 🔌 Registrasi plugin lokal (users, dll)
   await server.register([
     {
-      plugin: users,
+    plugin: users,
       options: {
         service: usersService,
         validator: UsersValidator,
       },
     },
     {
-       plugin: authentications,
+    plugin: authentications,
         options: {
       usersService,
       authenticationsService,
@@ -84,6 +89,13 @@ const init = async () => {
       validator: TasksValidator,
     },
   },
+  {
+    plugin: assets,
+    options: {
+      service: new AssetsService(),
+      validator: AssetsValidator,
+    },
+  }
   ]);
 
   // 🧱 Penanganan error global
