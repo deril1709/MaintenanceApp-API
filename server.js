@@ -62,7 +62,6 @@ const init = async () => {
       },
     }),
   });
-  console.log('DEBUG TokenManager:', TokenManager);
 
   // 🔌 Registrasi plugin lokal (users, dll)
   await server.register([
