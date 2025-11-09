@@ -1,7 +1,7 @@
-const { Pool } = require('pg');
-const bcrypt = require('bcrypt');
-const InvariantError = require('../../exceptions/InvariantError');
-const AuthenticationError = require('../../exceptions/AuthenticationError');
+const { Pool } = require("pg");
+const bcrypt = require("bcrypt");
+const InvariantError = require("../../exceptions/InvariantError");
+const AuthenticationError = require("../../exceptions/AuthenticationError");
 
 class UsersService {
   constructor() {
@@ -11,20 +11,20 @@ class UsersService {
   async addUser({ username, password, fullname }) {
     // Cek apakah username sudah digunakan
     const checkQuery = {
-      text: 'SELECT id FROM users WHERE username = $1',
+      text: "SELECT id FROM users WHERE username = $1",
       values: [username],
     };
     const result = await this._pool.query(checkQuery);
     if (result.rowCount > 0) {
-      throw new InvariantError('Username sudah digunakan');
+      throw new InvariantError("Username sudah digunakan");
     }
 
     const id = `user-${Date.now()}`;
     const hashedPassword = await bcrypt.hash(password, 10);
-    const role = 'teknisi';
+    const role = "teknisi";
 
     const query = {
-      text: 'INSERT INTO users VALUES($1, $2, $3, $4, $5) RETURNING id',
+      text: "INSERT INTO users VALUES($1, $2, $3, $4, $5) RETURNING id",
       values: [id, username, hashedPassword, fullname, role],
     };
 
@@ -34,7 +34,7 @@ class UsersService {
 
   async getUserByUsername(username) {
     const query = {
-      text: 'SELECT * FROM users WHERE username = $1',
+      text: "SELECT * FROM users WHERE username = $1",
       values: [username],
     };
 
@@ -42,37 +42,43 @@ class UsersService {
     return result.rows[0];
   }
 
+  async getUserTechnicians() {
+    const result = await this._pool.query(
+      "SELECT * FROM users WHERE role='teknisi' ORDER BY fullname ASC"
+    );
+    return result.rows;
+  }
+
   async verifyUserCredential(username, password) {
-  const query = {
-    text: 'SELECT id, username, password, role FROM users WHERE username = $1',
-    values: [username],
-  };
+    const query = {
+      text: "SELECT id, username, password, role FROM users WHERE username = $1",
+      values: [username],
+    };
 
-  const result = await this._pool.query(query);
+    const result = await this._pool.query(query);
 
-  if (!result.rowCount) {
-    throw new AuthenticationError('Kredensial yang Anda berikan salah');
+    if (!result.rowCount) {
+      throw new AuthenticationError("Kredensial yang Anda berikan salah");
+    }
+
+    const { id, password: hashedPassword, role } = result.rows[0];
+
+    const match = await bcrypt.compare(password, hashedPassword);
+    if (!match) {
+      throw new AuthenticationError("Kredensial yang Anda berikan salah");
+    }
+
+    return { id, username, role };
   }
-
-  const { id, password: hashedPassword, role } = result.rows[0];
-
-  const match = await bcrypt.compare(password, hashedPassword);
-  if (!match) {
-    throw new AuthenticationError('Kredensial yang Anda berikan salah');
-  }
-
-  return { id, username, role };
-}
 
   async findAdmin() {
-  const query = {
-    text: 'SELECT id FROM users WHERE role = $1 LIMIT 1',
-    values: ['admin'],
-  };
-  const result = await this._pool.query(query);
-  return result.rowCount > 0 ? result.rows[0] : null;
-}
-
+    const query = {
+      text: "SELECT id FROM users WHERE role = $1 LIMIT 1",
+      values: ["admin"],
+    };
+    const result = await this._pool.query(query);
+    return result.rowCount > 0 ? result.rows[0] : null;
+  }
 }
 
 module.exports = UsersService;
