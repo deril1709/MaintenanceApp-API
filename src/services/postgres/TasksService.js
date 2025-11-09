@@ -101,11 +101,17 @@ class TasksService {
     }
 
     if (status === 'completed') {
-      await this._pool.query(
-        'UPDATE assets SET status = $1, updated_at = $2 WHERE id = $3',
-        ['available', updatedAt, asset_id],
-      );
-    }
+  const currentDate = new Date().toISOString().split('T')[0]; // format YYYY-MM-DD
+
+  await this._pool.query(
+    `UPDATE assets
+     SET status = 'available',
+         last_maintenance = $1,
+         updated_at = $2
+     WHERE id = $3`,
+    [currentDate, updatedAt, asset_id]
+  );
+}
   }
 }
 
