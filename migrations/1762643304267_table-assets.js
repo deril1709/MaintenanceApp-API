@@ -3,7 +3,8 @@ exports.shorthands = undefined;
 
 exports.up = pgm => {
   // 1️⃣ Buat enum untuk status aset
-  pgm.createType('asset_status', ['available', 'in-use', 'maintenance', 'rusak']);
+  pgm.createType('asset_status', ['available', 'unavailable']);
+  pgm.createType('asset_category', ['GEDUNG_DAN_DALAM_RUANGAN', 'KELISTRIKAN', 'SISTEM_AIR_DAN_SANITASI', 'TEKNOLOGI_DAN_IT', 'MOBILITAS_DAN_LUAR_RUANG', 'KEAMANAN_DAN_KESELAMATAN', 'LAINNYA']);
 
   // 2️⃣ Buat tabel assets
   pgm.createTable('assets', {
@@ -16,7 +17,7 @@ exports.up = pgm => {
       notNull: true,
     },
     category: {
-      type: 'TEXT',
+      type: 'asset_category',
       notNull: true,
     },
     location: {
@@ -42,4 +43,5 @@ exports.up = pgm => {
 exports.down = pgm => {
   pgm.dropTable('assets');
   pgm.dropType('asset_status');
+  pgm.dropType('asset_category');
 };

@@ -1,6 +1,6 @@
 exports.up = (pgm) => {
   // Buat tipe ENUM baru untuk status tugas
-  pgm.createType('task_status', ['pending', 'in_progress', 'completed']);
+  pgm.createType('task_status', ['on_progress', 'completed']);
 
   pgm.createTable('tasks', {
     id: {
@@ -20,6 +20,11 @@ exports.up = (pgm) => {
       notNull: true,
       references: 'users(id)',
       onDelete: 'cascade',
+    },
+    asset_id: {
+      type: 'VARCHAR(50)',
+      references: '"assets"(id)',
+      onDelete: 'CASCADE',
     },
     status: {
       type: 'task_status',

@@ -11,22 +11,23 @@ class TasksHandler {
   }
 
   async postTaskHandler(request, h) {
-    const { role } = request.auth.credentials;
-    verifyAdmin(role);
+  const { role } = request.auth.credentials;
+  verifyAdmin(role);
 
-    this._validator.validateTaskPayload(request.payload);
-    const { title, description, assigned_to } = request.payload;
+  this._validator.validateTaskPayload(request.payload);
+  const { title, description, assigned_to, asset_id } = request.payload;
 
-    const taskId = await this._service.addTask({ title, description, assigned_to });
+  const taskId = await this._service.addTask({ title, description, assigned_to, asset_id });
 
-    const response = h.response({
-      status: 'success',
-      message: 'Tugas berhasil ditambahkan',
-      data: { taskId },
-    });
-    response.code(201);
-    return response;
-  }
+  const response = h.response({
+    status: 'success',
+    message: 'Tugas berhasil ditambahkan',
+    data: { taskId },
+  });
+  response.code(201);
+  return response;
+}
+
 
   async getTasksHandler(request) {
     const { role, id } = request.auth.credentials;
