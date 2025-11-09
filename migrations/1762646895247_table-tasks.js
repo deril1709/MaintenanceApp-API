@@ -29,7 +29,7 @@ exports.up = (pgm) => {
     status: {
       type: 'task_status',
       notNull: true,
-      default: 'pending',
+      default: 'on_progress',
     },
     created_at: {
       type: 'TEXT',

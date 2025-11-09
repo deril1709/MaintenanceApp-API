@@ -8,7 +8,7 @@ const TaskPayloadSchema = Joi.object({
 });
 
 const TaskStatusSchema = Joi.object({
-  status: Joi.string().valid('on_progress', 'completed').required(),
+  status: Joi.string().valid('on_progress', 'completed', 'pending').required(),
 });
 
 module.exports = { TaskPayloadSchema, TaskStatusSchema };
