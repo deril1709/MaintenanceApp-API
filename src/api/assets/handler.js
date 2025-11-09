@@ -12,8 +12,8 @@ class AssetsHandler {
 
   async postAssetHandler(request, h) {
     this._validator.validateAssetPayload(request.payload);
-    const { name, category, location } = request.payload;
-    const assetId = await this._service.addAsset({ name, category, location });
+    const { name, category, location, status } = request.payload;
+    const assetId = await this._service.addAsset({ name, category, location, status });
 
     const response = h.response({
       status: 'success',

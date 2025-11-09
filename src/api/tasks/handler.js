@@ -45,7 +45,6 @@ class TasksHandler {
 
   async putTaskStatusHandler(request) {
     const { role } = request.auth.credentials;
-    verifyTechnician(role);
 
     const { id } = request.params;
     this._validator.validateTaskStatus(request.payload);

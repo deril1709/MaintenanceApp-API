@@ -9,7 +9,10 @@ const routes = (handler) => [
     path: "/users/admin",
     handler: handler.postAdminUserHandler,
   },
-  { method: "GET", path: "/users/get-technicians", handler: handler.getUserTechniciansHandler },
+  { method: "GET", 
+    path: "/users/get-technicians", 
+    handler: handler.getUserTechniciansHandler 
+  },
 ];
 
 module.exports = routes;
