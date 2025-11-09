@@ -44,7 +44,7 @@ class UsersService {
 
   async getUserTechnicians() {
     const result = await this._pool.query(
-      "SELECT * FROM users WHERE role='teknisi' ORDER BY fullname ASC"
+      "SELECT id, username, fullname FROM users WHERE role='teknisi' ORDER BY fullname ASC"
     );
     return result.rows;
   }
