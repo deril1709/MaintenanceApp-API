@@ -42,7 +42,7 @@ const init = async () => {
   // 🚀 Membuat server instance
   const server = Hapi.server({
     port: process.env.PORT || 5000,
-    host: process.env.HOST || 'localhost',
+    host: process.env.HOST || '0.0.0.0',
     routes: {
       cors: {
         origin: ['*'], // Boleh disesuaikan
