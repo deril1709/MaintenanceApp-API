@@ -19,6 +19,12 @@ const tasks = require('./src/api/tasks');
 const TasksService = require('./src/services/postgres/TasksService');
 const TasksValidator = require('./src/validator/tasks');
 
+// plugin maintenance
+const { generateMaintenanceTasks } = require('./scheduler/maintenanceScheduler');
+const MaintenancesService = require('./src/services/postgres/MaintenanceService');
+const maintenances = require('./src/api/maintenance');
+const MaintenancesValidator = require('./src/validator/maintenance');
+
 // plugin assets
 const assets = require('./src/api/assets');
 const AssetsService = require('./src/services/postgres/AssetsService');
@@ -31,6 +37,8 @@ const init = async () => {
   // 🔧 Inisialisasi Service
   const usersService = new UsersService();
   const authenticationsService = new AuthenticationsService();
+  const maintenancesService = new MaintenancesService();
+
   // 🚀 Membuat server instance
   const server = Hapi.server({
     port: process.env.PORT || 5000,
@@ -94,6 +102,13 @@ const init = async () => {
       service: new AssetsService(),
       validator: AssetsValidator,
     },
+  },
+  {
+    plugin: maintenances,
+    options: {
+      service: maintenancesService,
+      validator: MaintenancesValidator,
+    },
   }
   ]);
 
@@ -132,6 +147,10 @@ const init = async () => {
   // 🚀 Jalankan server
   await server.start();
   console.log(`✅ Server berjalan pada ${server.info.uri}`);
+
+    // Jalankan scheduler tiap 24 jam
+  setInterval(generateMaintenanceTasks, 24 * 60 * 60 * 1000);
+  generateMaintenanceTasks();
 };
 
 init();
