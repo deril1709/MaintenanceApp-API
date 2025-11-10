@@ -27,8 +27,8 @@ const seedDatabase = async () => {
       INSERT INTO users (id, username, password, fullname, role)
       VALUES
         ('${adminId}', 'admin', '${passwordAdmin}', 'Administrator', 'admin'),
-        ('${techId1}', 'teknisi1', '${passwordTech1}', 'Teknisi Satu', 'technician'),
-        ('${techId2}', 'teknisi2', '${passwordTech2}', 'Teknisi Dua', 'technician');
+        ('${techId1}', 'teknisi1', '${passwordTech1}', 'Teknisi Satu', 'teknisi'),
+        ('${techId2}', 'teknisi2', '${passwordTech2}', 'Teknisi Dua', 'teknisi');
     `);
 
     // === ASSETS ===
