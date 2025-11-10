@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
+const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 const pool = new Pool();
@@ -17,19 +18,25 @@ const seedDatabase = async () => {
     const techId1 = `user-${nanoid(10)}`;
     const techId2 = `user-${nanoid(10)}`;
 
+     // Hash password sebelum disimpan
+    const passwordAdmin = await bcrypt.hash('admin123', 10);
+    const passwordTech1 = await bcrypt.hash('teknisi123', 10);
+    const passwordTech2 = await bcrypt.hash('teknisi123', 10);
+
     await pool.query(`
       INSERT INTO users (id, username, password, fullname, role)
       VALUES
-        ('${adminId}', 'admin', 'admin123', 'Administrator', 'admin'),
-        ('${techId1}', 'teknisi1', 'teknisi123', 'Teknisi Satu', 'technician'),
-        ('${techId2}', 'teknisi2', 'teknisi123', 'Teknisi Dua', 'technician');
+        ('${adminId}', 'admin', '${passwordAdmin}', 'Administrator', 'admin'),
+        ('${techId1}', 'teknisi1', '${passwordTech1}', 'Teknisi Satu', 'technician'),
+        ('${techId2}', 'teknisi2', '${passwordTech2}', 'Teknisi Dua', 'technician');
     `);
 
     // === ASSETS ===
     const asset1 = `asset-${nanoid(10)}`;
     const asset2 = `asset-${nanoid(10)}`;
     const asset3 = `asset-${nanoid(10)}`;
-
+    
+    
     await pool.query(`
       INSERT INTO assets (id, name, category, location, status, created_at, updated_at)
       VALUES
