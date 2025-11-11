@@ -48,43 +48,51 @@ class MaintenancesService {
   }
 
   async getUpcomingMaintenances() {
-    const query = `
-      SELECT 
-        m.id AS maintenance_id,
-        a.name AS asset_name,
-        a.last_maintenance,
-        m.frequency_days,
-        (m.frequency_days - EXTRACT(DAY FROM (NOW() - a.last_maintenance))) AS days_left
-      FROM maintenances m
-      JOIN assets a ON a.id = m.asset_id
-      ORDER BY days_left ASC
-    `;
+  const query = `
+    SELECT 
+      m.id AS maintenance_id,
+      a.name AS asset_name,
+      a.last_maintenance,
+      m.frequency_days,
+      CASE 
+        WHEN a.last_maintenance IS NULL 
+          THEN m.frequency_days
+        ELSE (m.frequency_days - EXTRACT(DAY FROM (NOW() - a.last_maintenance)))
+      END AS days_left
+    FROM maintenances m
+    JOIN assets a ON a.id = m.asset_id
+    ORDER BY days_left ASC
+  `;
 
-    const result = await this._pool.query(query);
+  const result = await this._pool.query(query);
 
-    const alerts = result.rows.filter(
-      (row) => row.days_left <= 2 && row.days_left >= 0
-    );
+  const alerts = result.rows.filter(
+    (row) => row.days_left <= 1 && row.days_left >= 0
+  );
 
-    return alerts.map((row) => {
-      const lastMaintenanceDate = new Date(row.last_maintenance);
-      const formattedDate = lastMaintenanceDate.toISOString().split('T')[0]; // YYYY-MM-DD
+  return alerts.map((row) => {
+    let formattedDate = null;
+    if (row.last_maintenance) {
+      formattedDate = new Date(row.last_maintenance).toISOString().split('T')[0];
+    }
 
-      const daysLeft = Math.floor(row.days_left);
-      const message =
-        daysLeft === 0
-          ? `Aset "${row.asset_name}" perlu maintenance hari ini`
-          : `Aset "${row.asset_name}" perlu maintenance dalam ${daysLeft} hari`;
+    const daysLeft = Math.floor(row.days_left ?? 0);
+    const message =
+      daysLeft === 0
+        ? `Aset "${row.asset_name}" perlu maintenance hari ini`
+        : `Aset "${row.asset_name}" perlu maintenance dalam ${daysLeft} hari`;
 
-      return {
-        maintenanceId: row.maintenance_id,
-        asset: row.asset_name,
-        lastMaintenance: formattedDate,
-        daysLeft,
-        message,
-      };
-    });
-  }
+    return {
+      maintenanceId: row.maintenance_id,
+      asset: row.asset_name,
+      lastMaintenance: formattedDate,
+      daysLeft,
+      message,
+    };
+  });
+}
+
+
 }
 
 module.exports = MaintenancesService;
