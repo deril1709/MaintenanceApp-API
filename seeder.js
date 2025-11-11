@@ -56,16 +56,16 @@ const seedDatabase = async () => {
         ('${task2}', 'Pengecekan Genset', 'Tes beban ringan', '${techId2}', '${asset2}', 'on_progress', NOW(), NOW());
     `);
 
-    // // === MAINTENANCES ===
-    // const maintenance1 = `maintenance-${nanoid(10)}`;
-    // const maintenance2 = `maintenance-${nanoid(10)}`;
+    // === MAINTENANCES ===
+    const maintenance1 = `maintenance-${nanoid(10)}`;
+    const maintenance2 = `maintenance-${nanoid(10)}`;
 
-    // await pool.query(`
-    //   INSERT INTO maintenances (id, asset_id, description, frequency_days, next_maintenance_date, created_at, updated_at)
-    //   VALUES
-    //     ('${maintenance1}', '${asset1}', 'Maintenance rutin AC', 30, NOW() + INTERVAL '3 days', NOW(), NOW()),
-    //     ('${maintenance2}', '${asset3}', 'Tes cetak dan pembersihan printer', 90, NOW() + INTERVAL '7 days', NOW(), NOW());
-    // `);
+    await pool.query(`
+      INSERT INTO maintenances (id, asset_id, description, frequency_days, next_maintenance_date, created_at, updated_at)
+      VALUES
+        ('${maintenance1}', '${asset1}', 'Maintenance rutin AC', 30, NOW() + INTERVAL '3 days', NOW(), NOW()),
+        ('${maintenance2}', '${asset3}', 'Tes cetak dan pembersihan printer', 90, NOW() + INTERVAL '7 days', NOW(), NOW());
+    `);
 
     console.log('✅ Seeding selesai!');
   } catch (error) {

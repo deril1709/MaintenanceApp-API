@@ -9,6 +9,11 @@ const routes = (handler) => [
     path: '/maintenances',
     handler: handler.getMaintenancesHandler,
   },
+  {
+    method: 'GET',
+    path: '/maintenances/alerts',
+    handler: handler.getUpcomingMaintenancesHandler,
+  },
 ];
 
 module.exports = routes;

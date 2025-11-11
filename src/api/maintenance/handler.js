@@ -5,6 +5,7 @@ class MaintenancesHandler {
     
     this.postMaintenanceHandler = this.postMaintenanceHandler.bind(this);
     this.getMaintenancesHandler = this.getMaintenancesHandler.bind(this);
+    this.getUpcomingMaintenancesHandler = this.getUpcomingMaintenancesHandler.bind(this);
   }
 
   async postMaintenanceHandler(request, h) {
@@ -27,6 +28,16 @@ class MaintenancesHandler {
     return {
       status: 'success',
       data: { maintenances },
+    };
+  }
+
+  async getUpcomingMaintenancesHandler() {
+    const alerts = await this._service.getUpcomingMaintenances();
+    return {
+      status: 'success',
+      data: {
+        alerts,
+      },
     };
   }
 }
