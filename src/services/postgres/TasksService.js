@@ -93,7 +93,7 @@ class TasksService {
     );
 
     // Update status asset secara otomatis (tanpa trigger)
-    if (status === 'progress') {
+    if (status === 'on_progress') {
       await this._pool.query(
         'UPDATE assets SET status = $1, updated_at = $2 WHERE id = $3',
         ['unavailable', updatedAt, asset_id],
@@ -113,6 +113,29 @@ class TasksService {
   );
 }
   }
+  async getCompletedTasks() {
+  const result = await this._pool.query(`
+    SELECT 
+      t.id AS task_id,
+      t.title,
+      t.description,
+      t.status,
+      t.updated_at AS completed_at,
+      a.id AS asset_id,
+      a.name AS asset_name,
+      a.location,
+      u.id AS technician_id,
+      u.fullname AS technician_name
+    FROM tasks t
+    LEFT JOIN assets a ON t.asset_id = a.id
+    LEFT JOIN users u ON t.assigned_to = u.id
+    WHERE t.status = 'completed'
+    ORDER BY t.updated_at DESC;
+  `);
+
+  return result.rows;
+}
+
 }
 
 module.exports = TasksService;

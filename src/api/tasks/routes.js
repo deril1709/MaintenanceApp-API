@@ -23,6 +23,11 @@ const routes = (handler) => [
       auth: 'maintenanceapp_jwt',
     },
   },
+  {
+  method: 'GET',
+  path: '/tasks/completed',
+  handler: handler.getCompletedTasksHandler,
+},
 ];
 
 module.exports = routes;

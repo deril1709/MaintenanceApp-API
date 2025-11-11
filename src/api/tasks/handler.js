@@ -8,6 +8,8 @@ class TasksHandler {
     this.postTaskHandler = this.postTaskHandler.bind(this);
     this.getTasksHandler = this.getTasksHandler.bind(this);
     this.putTaskStatusHandler = this.putTaskStatusHandler.bind(this);
+    this.getCompletedTasksHandler = this.getCompletedTasksHandler.bind(this);
+    
   }
 
   async postTaskHandler(request, h) {
@@ -57,6 +59,17 @@ class TasksHandler {
       message: 'Status tugas berhasil diperbarui',
     };
   }
+
+  async getCompletedTasksHandler() {
+  const tasks = await this._service.getCompletedTasks();
+
+  return {
+    status: 'success',
+    data: {
+      tasks,
+    },
+  };
+}
 }
 
 module.exports = TasksHandler;
