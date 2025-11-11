@@ -8,66 +8,94 @@ const pool = new Pool();
 
 const seedDatabase = async () => {
   try {
-    console.log('🌱 Seeding database...');
+    console.log('🌱 Seeding database dengan 20 data dummy...');
 
-    // Bersihkan tabel biar tidak duplikat
-    await pool.query('TRUNCATE users, assets, tasks RESTART IDENTITY CASCADE;');
+    // Bersihkan semua tabel agar tidak ada duplikat data
+    await pool.query('TRUNCATE users, assets, tasks, maintenances RESTART IDENTITY CASCADE;');
 
     // === USERS ===
     const adminId = `user-${nanoid(10)}`;
-    const techId1 = `user-${nanoid(10)}`;
-    const techId2 = `user-${nanoid(10)}`;
-
-     // Hash password sebelum disimpan
     const passwordAdmin = await bcrypt.hash('admin123', 10);
-    const passwordTech1 = await bcrypt.hash('teknisi123', 10);
-    const passwordTech2 = await bcrypt.hash('teknisi123', 10);
+    const passwordTech = await bcrypt.hash('teknisi123', 10);
 
-    await pool.query(`
-      INSERT INTO users (id, username, password, fullname, role)
-      VALUES
-        ('${adminId}', 'admin', '${passwordAdmin}', 'Administrator', 'admin'),
-        ('${techId1}', 'teknisi1', '${passwordTech1}', 'Teknisi Satu', 'teknisi'),
-        ('${techId2}', 'teknisi2', '${passwordTech2}', 'Teknisi Dua', 'teknisi');
-    `);
+    // Insert admin
+    await pool.query(
+      `INSERT INTO users (id, username, password, fullname, role)
+       VALUES ($1, 'admin', $2, 'Administrator', 'admin')`,
+      [adminId, passwordAdmin]
+    );
 
-    // === ASSETS ===
-    const asset1 = `asset-${nanoid(10)}`;
-    const asset2 = `asset-${nanoid(10)}`;
-    const asset3 = `asset-${nanoid(10)}`;
-    
-    
-    await pool.query(`
-      INSERT INTO assets (id, name, category, location, status, created_at, updated_at)
-      VALUES
-        ('${asset1}', 'AC Central', 'TEKNOLOGI_DAN_IT', 'Lantai 2', 'available' ,NOW(), NOW()),
-        ('${asset2}', 'Genset 2500W', 'KELISTRIKAN', 'Ruang Mesin', 'available', NOW(), NOW()),
-        ('${asset3}', 'Printer Canon G2010', 'GEDUNG_DAN_DALAM_RUANGAN', 'Lantai 1', 'available', NOW(), NOW());
-    `);
+    // Insert 5 teknisi
+    for (let i = 1; i <= 5; i++) {
+      const techId = `user-${nanoid(10)}`;
+      await pool.query(
+        `INSERT INTO users (id, username, password, fullname, role)
+         VALUES ($1, $2, $3, $4, 'teknisi')`,
+        [techId, `teknisi${i}`, passwordTech, `Teknisi ${i}`]
+      );
+    }
 
-    // === TASKS ===
-    const task1 = `task-${nanoid(10)}`;
-    const task2 = `task-${nanoid(10)}`;
+    const { rows: teknisiUsers } = await pool.query(`SELECT id FROM users WHERE role = 'teknisi'`);
+    if (teknisiUsers.length === 0) throw new Error('Tidak ada user teknisi ditemukan.');
 
-    await pool.query(`
-      INSERT INTO tasks (id, title, description, assigned_to, asset_id, status, created_at, updated_at)
-      VALUES
-        ('${task1}', 'Perawatan AC', 'Cuci filter dan cek freon', '${techId1}', '${asset1}', 'completed', NOW(), NOW()),
-        ('${task2}', 'Pengecekan Genset', 'Tes beban ringan', '${techId2}', '${asset2}', 'on_progress', NOW(), NOW());
-    `);
+    // === ASSETS (20 Data Dummy) ===
+    const categories = ['TEKNOLOGI_DAN_IT', 'KELISTRIKAN', 'GEDUNG_DAN_DALAM_RUANGAN'];
+    const locations = ['Lantai 1', 'Lantai 2', 'Ruang Server', 'Gudang', 'Ruang Admin'];
 
-    // === MAINTENANCES ===
-    const maintenance1 = `maintenance-${nanoid(10)}`;
-    const maintenance2 = `maintenance-${nanoid(10)}`;
+    const assets = [];
+    for (let i = 1; i <= 20; i++) {
+      const id = `asset-${nanoid(10)}`;
+      const name = `Peralatan-${i}`;
+      const category = categories[i % categories.length];
+      const location = locations[i % locations.length];
+      assets.push({ id, name, category, location });
+      await pool.query(
+        `INSERT INTO assets (id, name, category, location, status, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, 'available', NOW(), NOW())`,
+        [id, name, category, location]
+      );
+    }
 
-    await pool.query(`
-      INSERT INTO maintenances (id, asset_id, description, frequency_days, next_maintenance_date, created_at, updated_at)
-      VALUES
-        ('${maintenance1}', '${asset1}', 'Maintenance rutin AC', 30, NOW() + INTERVAL '3 days', NOW(), NOW()),
-        ('${maintenance2}', '${asset3}', 'Tes cetak dan pembersihan printer', 90, NOW() + INTERVAL '7 days', NOW(), NOW());
-    `);
+    // === TASKS (20 Data Dummy) ===
+    for (let i = 0; i < 20; i++) {
+      const id = `task-${nanoid(10)}`;
+      const title = `Tugas Perawatan #${i + 1}`;
+      const description = `Deskripsi tugas ke-${i + 1}`;
+      const assigned_to = teknisiUsers[i % teknisiUsers.length].id;
+      const asset_id = assets[i % assets.length].id;
+      const status = i % 2 === 0 ? 'on_progress' : 'completed';
 
-    console.log('✅ Seeding selesai!');
+      await pool.query(
+        `INSERT INTO tasks (id, title, description, assigned_to, asset_id, status, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
+        [id, title, description, assigned_to, asset_id, status]
+      );
+
+      // Jika task masih on_progress, ubah aset jadi unavailable
+      if (status === 'on_progress') {
+        await pool.query(
+          `UPDATE assets SET status = 'unavailable', updated_at = NOW() WHERE id = $1`,
+          [asset_id]
+        );
+      }
+    }
+
+    // === MAINTENANCES (20 Data Dummy) ===
+    for (let i = 0; i < 20; i++) {
+      const id = `maintenance-${nanoid(10)}`;
+      const asset_id = assets[i % assets.length].id;
+      const description = `Maintenance rutin aset ${i + 1}`;
+      const frequency_days = 30 + (i % 3) * 15; // variasi interval: 30, 45, 60
+      const assigned_to = teknisiUsers[i % teknisiUsers.length].id;
+
+      await pool.query(
+        `INSERT INTO maintenances (id, asset_id, description, frequency_days, next_maintenance_date, assigned_to, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, NOW() + make_interval(days := $4), $5, NOW(), NOW())`,
+        [id, asset_id, description, frequency_days, assigned_to]
+      );
+    }
+
+    console.log('✅ Seeding selesai! (20 aset, 20 task, 20 maintenance)');
   } catch (error) {
     console.error('❌ Gagal seeding:', error);
   } finally {
