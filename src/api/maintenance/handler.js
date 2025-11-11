@@ -9,9 +9,9 @@ class MaintenancesHandler {
 
   async postMaintenanceHandler(request, h) {
     this._validator.validateMaintenancePayload(request.payload);
-    const { asset_id, description, frequency_days } = request.payload;
+    const { asset_id, description, frequency_days, assigned_to } = request.payload;
 
-    const maintenanceId = await this._service.addMaintenance({ asset_id, description, frequency_days });
+    const maintenanceId = await this._service.addMaintenance({ asset_id, description, frequency_days, assigned_to });
 
     const response = h.response({
       status: 'success',

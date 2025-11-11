@@ -7,7 +7,7 @@ class MaintenancesService {
     this._pool = new Pool();
   }
 
-  async addMaintenance({ asset_id, description, frequency_days }) {
+  async addMaintenance({ asset_id, description, frequency_days, assigned_to }) {
     const assetCheck = await this._pool.query('SELECT id FROM assets WHERE id = $1', [asset_id]);
     if (!assetCheck.rowCount) throw new NotFoundError('Asset tidak ditemukan');
 
@@ -19,9 +19,9 @@ class MaintenancesService {
 
     const query = {
       text: `INSERT INTO maintenances
-        (id, asset_id, description, frequency_days, next_maintenance_date, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-      values: [id, asset_id, description, frequency_days, nextMaintenanceDate, createdAt, updatedAt],
+        (id, asset_id, description, frequency_days, assigned_to, next_maintenance_date, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+      values: [id, asset_id, description, frequency_days, assigned_to, nextMaintenanceDate, createdAt, updatedAt],
     };
 
     const result = await this._pool.query(query);
