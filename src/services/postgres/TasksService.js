@@ -70,37 +70,56 @@ class TasksService {
   }
 
   async updateTaskStatus(id, status, asset_condition, notes, technicianId) {
-    const updatedAt = new Date().toISOString();
-    const completedAt = status === 'complete' ? updatedAt : null;
+  const updatedAt = new Date().toISOString();
 
-    // Pastikan task milik teknisi yang sedang login
-    const verifyQuery = {
-      text: 'SELECT * FROM tasks WHERE id = $1 AND assigned_to = $2',
-      values: [id, technicianId],
-    };
-    const verifyResult = await this._pool.query(verifyQuery);
-    if (!verifyResult.rowCount) {
-      throw new NotFoundError('Tugas tidak ditemukan atau bukan milik Anda');
-    }
-
-    // Update status dan laporan
-    const query = {
-      text: `
-        UPDATE tasks
-        SET status = $1, asset_condition = $2, notes = $3,
-            updated_at = $4 WHERE id = $5
-        RETURNING id
-      `,
-      values: [status, asset_condition, notes, updatedAt, id],
-    };
-
-    const result = await this._pool.query(query);
-    if (!result.rowCount) {
-      throw new NotFoundError('Gagal memperbarui status tugas');
-    }
-
-    return result.rows[0].id;
+  // Pastikan task milik teknisi login
+  const verifyQuery = {
+    text: 'SELECT * FROM tasks WHERE id = $1 AND assigned_to = $2',
+    values: [id, technicianId],
+  };
+  const verifyResult = await this._pool.query(verifyQuery);
+  if (!verifyResult.rowCount) {
+    throw new NotFoundError('Tugas tidak ditemukan atau bukan milik Anda');
   }
+
+  // Update status dan detail
+  const query = {
+    text: `
+      UPDATE tasks
+      SET status = $1, asset_condition = $2, notes = $3, updated_at = $4
+      WHERE id = $5
+      RETURNING id, asset_id, assigned_to
+    `,
+    values: [status, asset_condition, notes, updatedAt, id],
+  };
+
+  const result = await this._pool.query(query);
+  if (!result.rowCount) {
+    throw new NotFoundError('Gagal memperbarui status tugas');
+  }
+
+  // Jika status completed → buat laporan
+  if (status === 'completed') {
+    const { nanoid } = await import('nanoid');
+    const reportId = `report-${nanoid(10)}`;
+
+    // Ambil nama teknisi
+    const userQuery = await this._pool.query(
+      'SELECT fullname FROM users WHERE id = $1',
+      [technicianId]
+    );
+    const technician_name = userQuery.rows[0]?.fullname || 'Unknown';
+
+    await this._pool.query(
+      `INSERT INTO reports (id, task_id, asset_condition, notes, technician_name, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [reportId, id, asset_condition, notes, technician_name, updatedAt]
+    );
+  }
+
+  return result.rows[0].id;
+}
+
   async getCompletedTasks() {
   const result = await this._pool.query(`
     SELECT 

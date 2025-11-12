@@ -20,7 +20,7 @@ const TasksService = require('./src/services/postgres/TasksService');
 const TasksValidator = require('./src/validator/tasks');
 
 // plugin maintenance
-const { generateMaintenanceTasks } = require('./scheduler/maintenanceScheduler');
+const { generateMaintenanceTasks } = require('./src/utils/maintenanceScheduler');
 const MaintenancesService = require('./src/services/postgres/MaintenanceService');
 const maintenances = require('./src/api/maintenance');
 const MaintenancesValidator = require('./src/validator/maintenance');
@@ -29,6 +29,10 @@ const MaintenancesValidator = require('./src/validator/maintenance');
 const assets = require('./src/api/assets');
 const AssetsService = require('./src/services/postgres/AssetsService');
 const AssetsValidator = require('./src/validator/assets');
+
+// plugin reports
+const reports = require('./src/api/reports');
+const ReportsService = require('./src/services/postgres/ReportsService');
 
 // Exceptions
 const ClientError = require('./src/exceptions/ClientError');
@@ -109,7 +113,13 @@ const init = async () => {
       service: maintenancesService,
       validator: MaintenancesValidator,
     },
-  }
+  },
+  {
+    plugin: reports,
+    options: { 
+      service:  new ReportsService(),
+    },
+  },
   ]);
 
   // 🧱 Penanganan error global
