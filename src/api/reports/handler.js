@@ -5,6 +5,7 @@ class ReportsHandler {
     this.getReportsHandler = this.getReportsHandler.bind(this);
     this.getReportDetailHandler = this.getReportDetailHandler.bind(this);
     this.exportReportsHandler = this.exportReportsHandler.bind(this);
+    this.getReportByTaskHandler = this.getReportByTaskHandler.bind(this);
   }
 
   async getReportsHandler(request, h) {
@@ -57,14 +58,23 @@ async exportReportsHandler(request, h) {
     }).code(403);
   }
 
-  const { id } = request.params; // pastikan endpoint-nya pakai /reports/{id}/export
-  const { buffer, filename } = await this._service.generateReportsPDF(id);
+  const { id: taskId } = request.params;
+  const { buffer, filename } = await this._service.generateReportsPDF(taskId);
 
   return h
     .response(buffer)
-    .type('application/pdf') // lebih aman daripada header manual
-    .header('Content-Disposition', `attachment; filename="${filename}"`)
-    .encoding('binary'); // pastikan dikirim sebagai biner
+    .header('Content-Type', 'application/pdf')
+    .header('Content-Disposition', `attachment; filename="${filename}"`);
+}
+
+async getReportByTaskHandler(request, h) {
+  const { id } = request.params; // ini adalah task_id
+  const report = await this._service.getReportByTaskId(id);
+
+  return h.response({
+    status: 'success',
+    data: { report },
+  });
 }
 
 

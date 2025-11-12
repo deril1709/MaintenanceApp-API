@@ -18,68 +18,61 @@ class ReportsService {
     return result.rows;
   }
 
-  async getReportById(id) {
+  async getReportByTaskId(taskId) {
     const result = await this._pool.query(`
       SELECT 
         r.*, 
         t.title, 
         t.description, 
         a.name AS asset_name, 
-        a.location,
-        u.fullname AS technician_name
+        a.location
       FROM reports r
       JOIN tasks t ON r.task_id = t.id
       LEFT JOIN assets a ON t.asset_id = a.id
-      LEFT JOIN users u ON t.assigned_to = u.id
-      WHERE r.id = $1
-    `, [id]);
+      WHERE r.task_id = $1
+    `, [taskId]);
 
     if (!result.rowCount) {
-      throw new NotFoundError('Laporan tidak ditemukan');
+      throw new NotFoundError('Laporan untuk tugas ini tidak ditemukan');
     }
 
     return result.rows[0];
   }
 
-  async generateReportsPDF(reportId) {
-  const report = await this.getReportById(reportId);
-  if (!report) throw new Error('Laporan tidak ditemukan');
+  async generateReportsPDF(taskId) {
+    const report = await this.getReportByTaskId(taskId);
+    if (!report) throw new NotFoundError('Laporan tidak ditemukan');
 
-  const filename = `report-${reportId}.pdf`;
-  const doc = new PDFDocument({ margin: 50 });
-  const chunks = [];
+    const filename = `report-${taskId}.pdf`;
+    const doc = new PDFDocument({ margin: 50 });
+    const chunks = [];
 
-  // Tangkap data PDF ke buffer
-  doc.on('data', (chunk) => chunks.push(chunk));
+    doc.on('data', (chunk) => chunks.push(chunk));
 
-  // === Header ===
-  doc.fontSize(18).text('LAPORAN MAINTENANCE ASET', { align: 'center' });
-  doc.moveDown();
+    // === Header ===
+    doc.fontSize(18).text('LAPORAN MAINTENANCE ASET', { align: 'center' });
+    doc.moveDown();
 
-  // === Detail ===
-  doc.fontSize(12);
-  doc.text(`ID Laporan: ${report.id}`);
-  doc.text(`Nama Aset: ${report.asset_name}`);
-  doc.text(`Lokasi: ${report.location}`);
-  doc.text(`Kondisi Aset: ${report.asset_condition}`);
-  doc.text(`Catatan: ${report.notes || '-'}`);
-  doc.text(`Teknisi: ${report.technician_name}`);
-  doc.text(`Tanggal Update: ${new Date(report.updated_at).toLocaleString()}`);
-  doc.moveDown();
+    // === Detail ===
+    doc.fontSize(12);
+    doc.text(`ID Tugas       : ${report.task_id}`);
+    doc.text(`Nama Aset       : ${report.asset_name}`);
+    doc.text(`Lokasi          : ${report.location}`);
+    doc.text(`Kondisi Aset    : ${report.asset_condition}`);
+    doc.text(`Catatan         : ${report.notes || '-'}`);
+    doc.text(`Teknisi         : ${report.technician_name}`);
+    doc.text(`Tanggal Update  : ${new Date(report.updated_at).toLocaleString()}`);
+    doc.moveDown();
 
-  doc.text('--- END OF REPORT ---', { align: 'center' });
+    doc.text('--- END OF REPORT ---', { align: 'center' });
+    doc.end();
 
-  // Tutup stream PDF
-  doc.end();
+    const buffer = await new Promise((resolve) => {
+      doc.on('end', () => resolve(Buffer.concat(chunks)));
+    });
 
-  // Tunggu sampai selesai ditulis
-  const buffer = await new Promise((resolve, reject) => {
-    doc.on('end', () => resolve(Buffer.concat(chunks)));
-    doc.on('error', reject);
-  });
-
-  return { buffer, filename };
-}
+    return { buffer, filename };
+  }
 }
 
 module.exports = ReportsService;
