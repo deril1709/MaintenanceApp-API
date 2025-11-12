@@ -23,9 +23,9 @@ async function generateMaintenanceTasks() {
       const taskId = `task-${nanoid(16)}`;
       const createdAt = new Date().toISOString();
 
-      // Cegah duplikasi task: pastikan belum ada task progress/pending untuk aset ini
+      // Cegah duplikasi task aktif (on_progress) untuk aset ini
       const existingTask = await pool.query(
-        `SELECT id FROM tasks WHERE asset_id = $1 AND status IN ('pending','on_progress')`,
+        `SELECT id FROM tasks WHERE asset_id = $1 AND status = 'on_progress'`,
         [maintenance.asset_id]
       );
 
@@ -34,11 +34,11 @@ async function generateMaintenanceTasks() {
         continue;
       }
 
-      // Tambahkan task baru
+      // Tambahkan task baru, gunakan status 'on_progress' sebagai default awal
       await pool.query(
         `
         INSERT INTO tasks (id, title, description, asset_id, assigned_to, status, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, 'pending', $6, $6)
+        VALUES ($1, $2, $3, $4, $5, 'on_progress', $6, $6)
         `,
         [
           taskId,
@@ -51,8 +51,10 @@ async function generateMaintenanceTasks() {
         ]
       );
 
-      // Update aset: jika sudah pernah di-maintenance, perbarui next_maintenance_date dan last_maintenance
-      const nextMaintenanceDate = dayjs().add(maintenance.frequency_days, 'day').format('YYYY-MM-DD');
+      // Update jadwal maintenance berikutnya
+      const nextMaintenanceDate = dayjs()
+        .add(maintenance.frequency_days, 'day')
+        .format('YYYY-MM-DD');
 
       await pool.query(
         `
@@ -64,7 +66,7 @@ async function generateMaintenanceTasks() {
         [maintenance.id, nextMaintenanceDate, createdAt]
       );
 
-      // Jika last_maintenance masih null, isi dengan tanggal hari ini
+      // Update aset: isi last_maintenance dengan hari ini (atau biarkan jika sudah diisi)
       await pool.query(
         `
         UPDATE assets
