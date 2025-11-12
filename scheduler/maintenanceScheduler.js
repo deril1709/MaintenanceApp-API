@@ -5,8 +5,9 @@ const dayjs = require('dayjs');
 const pool = new Pool();
 
 async function generateMaintenanceTasks() {
+  console.log(`[${new Date().toISOString()}] 🔄 Memeriksa jadwal maintenance...`);
   try {
-    // Ambil jadwal maintenance yang waktunya tiba
+    // Ambil jadwal maintenance yang sudah waktunya dibuat task
     const result = await pool.query(`
       SELECT m.*, a.name AS asset_name, a.last_maintenance
       FROM maintenances m
@@ -23,22 +24,27 @@ async function generateMaintenanceTasks() {
       const taskId = `task-${nanoid(16)}`;
       const createdAt = new Date().toISOString();
 
-      // Cegah duplikasi task aktif (on_progress) untuk aset ini
+      // Cek apakah hari ini sudah dibuat task untuk aset ini
       const existingTask = await pool.query(
-        `SELECT id FROM tasks WHERE asset_id = $1 AND status = 'on_progress'`,
+        `
+        SELECT id FROM tasks 
+        WHERE asset_id = $1 
+          AND status IN ('on_progress', 'pending')
+          AND created_at::date = NOW()::date
+        `,
         [maintenance.asset_id]
       );
 
       if (existingTask.rowCount > 0) {
-        console.log(`⚠️  Aset ${maintenance.asset_id} sudah memiliki task aktif, dilewati.`);
+        console.log(`⚠️  Aset ${maintenance.asset_name} sudah memiliki task aktif hari ini, dilewati.`);
         continue;
       }
 
-      // Tambahkan task baru, gunakan status 'on_progress' sebagai default awal
+      // Buat task baru (mulai dari pending, nanti teknisi bisa ubah ke on_progress)
       await pool.query(
         `
         INSERT INTO tasks (id, title, description, asset_id, assigned_to, status, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, 'on_progress', $6, $6)
+        VALUES ($1, $2, $3, $4, $5, 'pending', $6, $6)
         `,
         [
           taskId,
@@ -51,7 +57,7 @@ async function generateMaintenanceTasks() {
         ]
       );
 
-      // Update jadwal maintenance berikutnya
+      // Hitung tanggal maintenance berikutnya
       const nextMaintenanceDate = dayjs()
         .add(maintenance.frequency_days, 'day')
         .format('YYYY-MM-DD');
@@ -66,7 +72,7 @@ async function generateMaintenanceTasks() {
         [maintenance.id, nextMaintenanceDate, createdAt]
       );
 
-      // Update aset: isi last_maintenance dengan hari ini (atau biarkan jika sudah diisi)
+      // Update last_maintenance jika masih null
       await pool.query(
         `
         UPDATE assets
@@ -83,9 +89,8 @@ async function generateMaintenanceTasks() {
     console.log(`[${new Date().toISOString()}] Maintenance tasks generated: ${result.rowCount}`);
   } catch (error) {
     console.error('❌ Error generating maintenance tasks:', error);
-  } finally {
-    await pool.end();
   }
 }
 
+// Jangan tutup pool di sini, biarkan scheduler yang memanggil fungsi ini secara berkala.
 module.exports = { generateMaintenanceTasks };

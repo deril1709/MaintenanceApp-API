@@ -149,7 +149,7 @@ const init = async () => {
   console.log(`✅ Server berjalan pada ${server.info.uri}`);
 
     // Jalankan scheduler tiap 24 jam
-  setInterval(generateMaintenanceTasks, 24 * 60 * 60 * 1000);
+  setInterval(generateMaintenanceTasks, 24 * 100);
   generateMaintenanceTasks();
 };
 
