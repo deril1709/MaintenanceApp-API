@@ -25,7 +25,7 @@ async function generateMaintenanceTasks() {
 
       // Cegah duplikasi task: pastikan belum ada task progress/pending untuk aset ini
       const existingTask = await pool.query(
-        `SELECT id FROM tasks WHERE asset_id = $1 AND status IN ('pending','progress')`,
+        `SELECT id FROM tasks WHERE asset_id = $1 AND status IN ('pending','on_progress')`,
         [maintenance.asset_id]
       );
 
