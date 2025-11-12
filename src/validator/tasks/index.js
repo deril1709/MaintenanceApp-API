@@ -7,8 +7,10 @@ const TasksValidator = {
     if (result.error) throw new InvariantError(result.error.message);
   },
   validateTaskStatus: (payload) => {
-    const result = TaskStatusSchema.validate(payload);
-    if (result.error) throw new InvariantError(result.error.message);
+    const result = TaskStatusSchema.validate(payload, { abortEarly: false });
+    if (result.error) {
+      throw new InvariantError(result.error.message);
+    }
   },
 };
 

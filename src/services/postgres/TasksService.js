@@ -69,49 +69,37 @@ class TasksService {
     return result.rows;
   }
 
-  async updateTaskStatus(id, status) {
-    const validStatuses = ['pending', 'on_progress', 'completed'];
-    if (!validStatuses.includes(status)) {
-      throw new InvariantError('Status task tidak valid');
-    }
-
-    // Cek apakah task ada dan ambil asset_id
-    const taskResult = await this._pool.query(
-      'SELECT asset_id FROM tasks WHERE id = $1',
-      [id],
-    );
-
-    if (!taskResult.rowCount) throw new NotFoundError('Tugas tidak ditemukan');
-
-    const { asset_id } = taskResult.rows[0];
+  async updateTaskStatus(id, status, asset_condition, notes, technicianId) {
     const updatedAt = new Date().toISOString();
+    const completedAt = status === 'complete' ? updatedAt : null;
 
-    // Update status task
-    await this._pool.query(
-      'UPDATE tasks SET status = $1, updated_at = $2 WHERE id = $3',
-      [status, updatedAt, id],
-    );
-
-    // Update status asset secara otomatis (tanpa trigger)
-    if (status === 'on_progress') {
-      await this._pool.query(
-        'UPDATE assets SET status = $1, updated_at = $2 WHERE id = $3',
-        ['unavailable', updatedAt, asset_id],
-      );
+    // Pastikan task milik teknisi yang sedang login
+    const verifyQuery = {
+      text: 'SELECT * FROM tasks WHERE id = $1 AND assigned_to = $2',
+      values: [id, technicianId],
+    };
+    const verifyResult = await this._pool.query(verifyQuery);
+    if (!verifyResult.rowCount) {
+      throw new NotFoundError('Tugas tidak ditemukan atau bukan milik Anda');
     }
 
-    if (status === 'completed') {
-  const currentDate = new Date().toISOString().split('T')[0]; // format YYYY-MM-DD
+    // Update status dan laporan
+    const query = {
+      text: `
+        UPDATE tasks
+        SET status = $1, asset_condition = $2, notes = $3,
+            updated_at = $4 WHERE id = $5
+        RETURNING id
+      `,
+      values: [status, asset_condition, notes, updatedAt, id],
+    };
 
-  await this._pool.query(
-    `UPDATE assets
-     SET status = 'available',
-         last_maintenance = $1,
-         updated_at = $2
-     WHERE id = $3`,
-    [currentDate, updatedAt, asset_id]
-  );
-}
+    const result = await this._pool.query(query);
+    if (!result.rowCount) {
+      throw new NotFoundError('Gagal memperbarui status tugas');
+    }
+
+    return result.rows[0].id;
   }
   async getCompletedTasks() {
   const result = await this._pool.query(`

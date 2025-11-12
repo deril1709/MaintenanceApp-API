@@ -45,19 +45,26 @@ class TasksHandler {
     };
   }
 
-  async putTaskStatusHandler(request) {
-    const { role } = request.auth.credentials;
+  async putTaskStatusHandler(request, h) {
+    this._validator.validateTaskStatus(request.payload);
 
     const { id } = request.params;
-    this._validator.validateTaskStatus(request.payload);
-    const { status } = request.payload;
+    const { status, asset_condition, notes } = request.payload;
+    const { id: technicianId } = request.auth.credentials;
 
-    await this._service.updateTaskStatus(id, status);
+    const taskId = await this._service.updateTaskStatus(
+      id,
+      status,
+      asset_condition,
+      notes,
+      technicianId
+    );
 
-    return {
+    return h.response({
       status: 'success',
       message: 'Status tugas berhasil diperbarui',
-    };
+      data: { taskId },
+    }).code(200);
   }
 
   async getCompletedTasksHandler() {
