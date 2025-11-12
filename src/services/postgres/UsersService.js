@@ -71,6 +71,21 @@ class UsersService {
     return { id, username, role };
   }
 
+    async getUserById(id) {
+    const query = {
+      text: "SELECT id, username, fullname, role FROM users WHERE id = $1",
+      values: [id],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rowCount) {
+      throw new NotFoundError(`User dengan id ${id} tidak ditemukan`);
+    }
+
+    return result.rows[0];
+  }
+  
   async findAdmin() {
     const query = {
       text: "SELECT id FROM users WHERE role = $1 LIMIT 1",

@@ -8,6 +8,7 @@ class UsersHandler {
     this.postUserHandler = this.postUserHandler.bind(this);
     this.postAdminUserHandler = this.postAdminUserHandler.bind(this);
     this.getUserTechniciansHandler = this.getUserTechniciansHandler.bind(this);
+    this.getUserByIdHandler = this.getUserByIdHandler.bind(this);
   }
 
   async postUserHandler(request, h) {
@@ -74,6 +75,15 @@ class UsersHandler {
     // response.code(200);
 
     // return response
+  }
+
+  async getUserByIdHandler(request, h) {
+    const { id } = request.params;
+    const user = await this._service.getUserById(id);
+    return {
+      status: "success",
+      data: { user },
+    };
   }
 }
 
