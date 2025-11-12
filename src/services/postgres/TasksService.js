@@ -70,7 +70,7 @@ class TasksService {
   }
 
   async updateTaskStatus(id, status) {
-    const validStatuses = ['pending', 'progress', 'completed'];
+    const validStatuses = ['pending', 'on_progress', 'completed'];
     if (!validStatuses.includes(status)) {
       throw new InvariantError('Status task tidak valid');
     }
