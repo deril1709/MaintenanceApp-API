@@ -1,4 +1,4 @@
-# 🧰 Maintenance Management System – Fakultas Peternakan UNHAS
+# 🧰 Assets Maintenance App – Fakultas Peternakan UNHAS
 
 Aplikasi berbasis web untuk mengelola dan memantau kegiatan **maintenance aset** di Fakultas Peternakan Universitas Hasanuddin.  
 Didesain untuk membantu **admin** dan **teknisi** dalam menjalankan proses perawatan secara terstruktur dan terdokumentasi.
