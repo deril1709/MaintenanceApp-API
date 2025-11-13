@@ -28,16 +28,3 @@ Didesain untuk membantu **admin** dan **teknisi** dalam menjalankan proses peraw
 - **Day.js** – format dan manipulasi tanggal  
 
 ---
-
-
-## 🏗️ Cara Menjalankan
-
-```bash
-# Install dependencies
-npm install
-
-# Jalankan migrasi database
-npm run migrate up
-
-# Jalankan server
-npm run start
