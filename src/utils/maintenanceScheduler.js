@@ -29,7 +29,7 @@ async function generateMaintenanceTasks() {
         `
         SELECT id FROM tasks 
         WHERE asset_id = $1 
-          AND status IN ('on_progress', 'pending')
+          AND status IN ('on_progress')
           AND created_at::date = NOW()::date
         `,
         [maintenance.asset_id]
@@ -44,7 +44,7 @@ async function generateMaintenanceTasks() {
       await pool.query(
         `
         INSERT INTO tasks (id, title, description, asset_id, assigned_to, status, created_at, updated_at)
-        VALUES ($1, $2, $3, $4, $5, 'pending', $6, $6)
+        VALUES ($1, $2, $3, $4, $5, 'on_progress', $6, $6)
         `,
         [
           taskId,

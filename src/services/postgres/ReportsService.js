@@ -61,6 +61,7 @@ class ReportsService {
       doc.on('error', reject);
 
       // === Header ===
+      doc.font('Times-Bold');
       doc.fontSize(16).text('LAPORAN MAINTENANCE ASET', { align: 'center' });
       doc.moveDown();
       doc.fontSize(10).text(`Tanggal Dibuat: ${new Date().toLocaleString()}`, { align: 'right' });
