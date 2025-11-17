@@ -45,14 +45,16 @@ const init = async () => {
 
   // 🚀 Membuat server instance
   const server = Hapi.server({
-    port: process.env.PORT || 5000,
-    host: process.env.HOST || '0.0.0.0',
-    routes: {
-      cors: {
-        origin: ['*'], // Boleh disesuaikan
-      },
-    },
-  });
+  port: 5000,
+  host: '0.0.0.0',
+  routes: {
+    cors: { origin: ['*'] },
+  },
+});
+
+// Tambahkan prefix /api untuk semua route
+server.realm.modifiers.route.prefix = '/api';
+
 
   // 🧩 Registrasi plugin JWT (nanti akan digunakan untuk auth)
   await server.register(Jwt);
