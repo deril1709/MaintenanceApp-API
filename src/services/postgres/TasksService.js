@@ -117,13 +117,15 @@ class TasksService {
     );
     // logic untuk mengubah status aset menjadi available setelah tugas selesai
     const assetId = result.rows[0].asset_id;
+  const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
 
-  await this._pool.query(
-      `UPDATE assets 
-      SET status = 'available', last_maintenance = $1, updated_at = $1
-      WHERE id = $2`,
-      [updatedAt, assetId]
-    );
+await this._pool.query(
+  `UPDATE assets 
+   SET status = 'available', last_maintenance = $1, updated_at = $2
+   WHERE id = $3`,
+  [today, updatedAt, assetId]
+);
+
   }
 
   return result.rows[0].id;
