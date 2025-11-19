@@ -113,7 +113,16 @@ class TasksService {
     await this._pool.query(
       `INSERT INTO reports (id, task_id, asset_condition, notes, technician_name, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6)`,
-      [reportId, id, asset_condition, notes, technician_name, updatedAt]
+      [reportId, id, asset_condition, notes, technician_name, updatedAt]    
+    );
+    // logic untuk mengubah status aset menjadi available setelah tugas selesai
+    const assetId = result.rows[0].asset_id;
+
+  await this._pool.query(
+      `UPDATE assets 
+      SET status = 'available', last_maintenance = $1, updated_at = $1
+      WHERE id = $2`,
+      [updatedAt, assetId]
     );
   }
 
