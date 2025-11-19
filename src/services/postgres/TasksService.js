@@ -100,33 +100,32 @@ class TasksService {
 
   // Jika status completed → buat laporan
   if (status === 'completed') {
-    const { nanoid } = await import('nanoid');
-    const reportId = `report-${nanoid(10)}`;
+  const { nanoid } = await import('nanoid');
+  const reportId = `report-${nanoid(10)}`;
 
-    // Ambil nama teknisi
-    const userQuery = await this._pool.query(
-      'SELECT fullname FROM users WHERE id = $1',
-      [technicianId]
-    );
-    const technician_name = userQuery.rows[0]?.fullname || 'Unknown';
+  const userQuery = await this._pool.query(
+    'SELECT fullname FROM users WHERE id = $1',
+    [technicianId]
+  );
+  const technician_name = userQuery.rows[0]?.fullname || 'Unknown';
 
-    await this._pool.query(
-      `INSERT INTO reports (id, task_id, asset_condition, notes, technician_name, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [reportId, id, asset_condition, notes, technician_name, updatedAt]    
-    );
-    // logic untuk mengubah status aset menjadi available setelah tugas selesai
-    const assetId = result.rows[0].asset_id;
-  const today = new Date().toISOString().split('T')[0]; // yyyy-mm-dd
+  await this._pool.query(
+    `INSERT INTO reports (id, task_id, asset_condition, notes, technician_name, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [reportId, id, asset_condition, notes, technician_name, updatedAt]
+  );
 
-await this._pool.query(
-  `UPDATE assets 
-   SET status = 'available', last_maintenance = $1, updated_at = $2
-   WHERE id = $3`,
-  [today, updatedAt, assetId]
-);
+  const assetId = result.rows[0].asset_id;
+  const today = updatedAt.split('T')[0]; // yyyy-mm-dd
 
-  }
+  await this._pool.query(
+    `UPDATE assets 
+     SET status = 'available', last_maintenance = $1, updated_at = NOW()
+     WHERE id = $2`,
+    [today, assetId]
+  );
+}
+
 
   return result.rows[0].id;
 }
