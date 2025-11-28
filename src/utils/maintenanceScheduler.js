@@ -36,7 +36,7 @@ async function generateMaintenanceTasks() {
       );
 
       if (existingTask.rowCount > 0) {
-        console.log(`⚠️  Aset ${maintenance.asset_name} sudah memiliki task aktif hari ini, dilewati.`);
+        console.log(`⚠️  Aset ${maintenance.asset_name} sudah memiliki task aktif untuk hari ini.`);
         continue;
       }
 

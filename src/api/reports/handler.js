@@ -61,11 +61,18 @@ async exportReportsHandler(request, h) {
   const { id: taskId } = request.params;
   const { buffer, filename } = await this._service.generateReportsPDF(taskId);
 
+  // Generate filename unik agar HP tidak pakai cache lama
+  const uniqueFilename = filename.replace('.pdf', '') + '-' + Date.now() + '.pdf';
+
   return h
     .response(buffer)
     .header('Content-Type', 'application/pdf')
-    .header('Content-Disposition', `attachment; filename="${filename}"`);
+    .header('Content-Disposition', `attachment; filename="${uniqueFilename}"`)
+    .header('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+    .header('Pragma', 'no-cache')
+    .header('Expires', '0');
 }
+
 
 async getReportByTaskHandler(request, h) {
   const { id } = request.params; // ini adalah task_id
